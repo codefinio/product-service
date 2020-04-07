@@ -1,10 +1,13 @@
 package main
 
-import (
-	httpServer "product-service/internals/infrastructure/http"
-)
+import "product-service/internals/container"
 
 func main() {
-	sv := httpServer.NewHTTPServer()
-	sv.Start()
+	c, err := container.NewContainer()
+	if err != nil {
+		panic(err)
+	}
+	if err := c.Start(); err != nil {
+		panic(err)
+	}
 }

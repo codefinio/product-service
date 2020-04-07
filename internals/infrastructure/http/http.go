@@ -2,42 +2,44 @@ package http
 
 import (
 	"github.com/gin-gonic/gin"
+	"product-service/internals/config"
 	ctrl "product-service/internals/controller"
+	"strconv"
 )
-// infrastructure -> Controller -> Service -> Entity
-// Service -> Repository -> DB
 // Server ...
 type Server struct {
-	route *gin.Engine
-	pingCtrl *ctrl.PingController
-
-	productCtrl *ctrl.ProductController
+	route    *gin.Engine
+	gatewayCtrl ctrl.GatewayCtrl
+	env config.Configuration
 }
 
+// Configure ...
 func (h *Server) Configure() {
 	r := h.route
-	r.GET("/ping", h.pingCtrl.GetPing)
+	r.GET("/ping", h.gatewayCtrl.PingCtrl.GetPing)
 
 	g := r.Group("/product")
 	{
-		g.GET("/getAll",h.productCtrl.GetProducts)
-		g.POST("/add",h.productCtrl.AddProduct)
-		g.PUT("/update/:id", h.productCtrl.UpdateProduct)
+		g.GET("/getAll", h.gatewayCtrl.ProductCtrl.GetProducts)
+		g.POST("/add", h.gatewayCtrl.ProductCtrl.AddProduct)
+		g.PUT("/update/:id", h.gatewayCtrl.ProductCtrl.UpdateProduct)
 	}
 }
+
 // Start ...
 func (h *Server) Start() {
 	h.Configure()
-	if err := h.route.Run(":3000"); err != nil {
+
+	if err := h.route.Run(":"+ strconv.Itoa(h.env.Port)); err != nil {
 		panic(err)
 	}
 }
 
-func NewHTTPServer() *Server {
-	ctrl.NewPingController()
+// NewHTTPServer ...
+func NewHTTPServer(g ctrl.GatewayCtrl, env config.Configuration) *Server {
 	return &Server{
-		route: gin.Default(),
-		pingCtrl: ctrl.NewPingController(),
-		productCtrl: ctrl.NewProductController(),
+		route:       gin.Default(),
+		gatewayCtrl: g,
+		env: env,
 	}
 }
